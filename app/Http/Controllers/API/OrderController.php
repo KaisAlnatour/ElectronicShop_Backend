@@ -20,8 +20,7 @@ class OrderController extends BaseController
             [
                 'customerId' => 'required',
                 'orderDate' => 'required',
-//                'orderNumber' => 'required',
-//                'TotalAmount' => 'required'
+                'orderNumber' => 'required',
             ]
         );
 
@@ -37,8 +36,10 @@ class OrderController extends BaseController
             $order->customerId = $request->customerId;
             $order->orderDate = Carbon::createFromFormat(config('app.dateFormat'), $request->orderDate)->format('Y/m/d');
             $order->orderNumber = $request->orderNumber;
-            $order->TotalAmount = 2;
+            $order->TotalAmount = 0;
             $order->save();
+
+            $totalAmount = 0;
 
             if (isset($request->itmes)) {
                 foreach ($request->itmes as $key => $value) {
@@ -47,10 +48,14 @@ class OrderController extends BaseController
                     $itme->productId = $value['productId'];
                     $itme->quantity = $value['quantity'];
                     $product = Product::find($value['productId']);
-                    $itme->unitPrice = 5;
+                    $itme->unitPrice = $product->unitPrice * $itme->quantity;
                     $itme->save();
+                    $totalAmount += $itme->unitPrice;
                 }
             }
+
+            $order->TotalAmount = $totalAmount;
+            $order->save();
 
             return $this->sendResponse(new OrderRes($order), 'Add Product successfully.');
         }
@@ -59,12 +64,13 @@ class OrderController extends BaseController
 
     public function editOrder(Request $request)
     {
+
+
         $validator = Validator::make($request->all(),
             [
                 'customerId' => 'required',
                 'orderDate' => 'required',
                 'orderNumber' => 'required',
-                'TotalAmount' => 'required'
             ]
         );
 
@@ -72,17 +78,39 @@ class OrderController extends BaseController
             return $this->sendError('Validation Error.', $validator->errors(), 400);
         }
 
-        $order = Order::find($request->id);
-        if (is_null($order)) {
-            return $this->sendError('Not Found Order.');
-        }
-        $order->customerId = $request->customerId;
-        $order->orderDate = Carbon::createFromFormat(config('app.dateFormat'), $request->orderDate)->format('Y/m/d');;
-        $order->orderNumber = $request->orderNumber;
-        $order->TotalAmount = $request->TotalAmount;
-        $order->save();
+        $supplier = Customer::where('id',$request->customerId)->first();
+        if (is_null($supplier)) {
+            return $this->sendError('Customer Not Found ');
+        } else {
+            $order = Order::find($request->id);
+            $order->customerId = $request->customerId;
+            $order->orderDate = Carbon::createFromFormat(config('app.dateFormat'), $request->orderDate)->format('Y/m/d');
+            $order->orderNumber = $request->orderNumber;
+            $order->TotalAmount = 0;
+            $order->save();
 
-        return $this->sendResponse(new OrderRes($order), 'Edit Order successfully.');
+            $totalAmount = 0;
+
+            if (isset($request->itmes)) {
+                foreach ($request->itmes as $key => $value) {
+                    $itme = new OrderItem();
+//                    $itme = OrderItem::find($value->id);
+                    $itme->orderId = $order->id;
+                    $itme->productId = $value['productId'];
+                    $itme->quantity = $value['quantity'];
+                    $product = Product::find($value['productId']);
+                    $itme->unitPrice = $product->unitPrice * $itme->quantity;
+                    $itme->save();
+                    $totalAmount += $itme->unitPrice;
+                }
+            }
+
+            $order->TotalAmount = $totalAmount;
+            $order->save();
+        }
+
+        return $this->sendResponse(new OrderRes($order), 'Add Product successfully.');
+
     }
 
 
