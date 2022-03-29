@@ -91,7 +91,7 @@ class ProductController extends BaseController
     public function getAllSupplier()
     {
         $product = Supplier::all();
-        return $this->sendResponse(SupplierRes::collection($product), 'Product retrieved successfully.');
+        return $this->sendResponse(SupplierRes::collection($product), 'Supplier retrieved successfully.');
     }
 
 }

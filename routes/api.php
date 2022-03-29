@@ -33,6 +33,7 @@ Route::group(['prefix' => 'order'], function () {
     Route::put('edit', [OrderController::class, 'editOrder']);
     Route::delete('delete/{id}', [OrderController::class, 'deleteOrder']);
     Route::get('getAll', [OrderController::class, 'getAllOrder']);
+    Route::get('getAllCustomer', [OrderController::class, 'getAllCustomer']);
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

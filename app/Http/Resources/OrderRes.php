@@ -19,7 +19,8 @@ class OrderRes extends JsonResource
             'customerId' => $this->customerId,
             'orderDate' => $this->orderDate,
             'orderNumber' => $this->orderNumber,
-            'TotalAmount' => $this->TotalAmount
+            'TotalAmount' => $this->TotalAmount,
+            'customer' => isset($this->customer) ? $this->customer : null,
         ];
     }
 }

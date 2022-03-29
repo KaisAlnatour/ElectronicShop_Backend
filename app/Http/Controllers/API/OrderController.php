@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\API;
 use App\Http\Controllers\API\BaseController as BaseController;
+use App\Http\Resources\CustomerRes;
 use App\Http\Resources\OrderRes;
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Product;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -17,8 +20,8 @@ class OrderController extends BaseController
             [
                 'customerId' => 'required',
                 'orderDate' => 'required',
-                'orderNumber' => 'required',
-                'TotalAmount' => 'required'
+//                'orderNumber' => 'required',
+//                'TotalAmount' => 'required'
             ]
         );
 
@@ -30,14 +33,26 @@ class OrderController extends BaseController
         if (is_null($supplier)) {
             return $this->sendError('Customer Not Found ');
         } else {
-            $product = new Order();
-            $product->customerId = $request->customerId;
-            $product->orderDate = Carbon::createFromFormat(config('app.dateFormat'), $request->orderDate)->format('Y/m/d');;
-            $product->orderNumber = $request->orderNumber;
-            $product->TotalAmount = $request->TotalAmount;
-            $product->save();
+            $order = new Order();
+            $order->customerId = $request->customerId;
+            $order->orderDate = Carbon::createFromFormat(config('app.dateFormat'), $request->orderDate)->format('Y/m/d');
+            $order->orderNumber = $request->orderNumber;
+            $order->TotalAmount = 2;
+            $order->save();
 
-            return $this->sendResponse(new OrderRes($product), 'Add Product successfully.');
+            if (isset($request->itmes)) {
+                foreach ($request->itmes as $key => $value) {
+                    $itme = new OrderItem();
+                    $itme->orderId = $order->id;
+                    $itme->productId = $value['productId'];
+                    $itme->quantity = $value['quantity'];
+                    $product = Product::find($value['productId']);
+                    $itme->unitPrice = 5;
+                    $itme->save();
+                }
+            }
+
+            return $this->sendResponse(new OrderRes($order), 'Add Product successfully.');
         }
     }
 
@@ -57,17 +72,17 @@ class OrderController extends BaseController
             return $this->sendError('Validation Error.', $validator->errors(), 400);
         }
 
-        $product = Order::find($request->id);
-        if (is_null($product)) {
+        $order = Order::find($request->id);
+        if (is_null($order)) {
             return $this->sendError('Not Found Order.');
         }
-        $product->customerId = $request->customerId;
-        $product->orderDate = Carbon::createFromFormat(config('app.dateFormat'), $request->orderDate)->format('Y/m/d');;
-        $product->orderNumber = $request->orderNumber;
-        $product->TotalAmount = $request->TotalAmount;
-        $product->save();
+        $order->customerId = $request->customerId;
+        $order->orderDate = Carbon::createFromFormat(config('app.dateFormat'), $request->orderDate)->format('Y/m/d');;
+        $order->orderNumber = $request->orderNumber;
+        $order->TotalAmount = $request->TotalAmount;
+        $order->save();
 
-        return $this->sendResponse(new OrderRes($product), 'Edit Order successfully.');
+        return $this->sendResponse(new OrderRes($order), 'Edit Order successfully.');
     }
 
 
@@ -87,4 +102,11 @@ class OrderController extends BaseController
         $order = Order::all();
         return $this->sendResponse(OrderRes::collection($order), 'Order retrieved successfully.');
     }
+
+    public function getAllCustomer()
+    {
+        $customer = Customer::all();
+        return $this->sendResponse(CustomerRes::collection($customer), 'Customer retrieved successfully.');
+    }
+
 }
