@@ -93,9 +93,10 @@ class OrderController extends BaseController
 
             if (isset($request->itmes)) {
                 foreach ($request->itmes as $key => $value) {
-                    if (isset($value['id']))
-                        $itme = OrderItem::find($value['id']);
-                    else
+//                        $itme = OrderItem::find($value['id']);
+                    $itme = OrderItem::where('orderId',$order->id)->where('productId',$value['productId'])->first();
+
+                    if (is_null($itme))
                         $itme = new OrderItem();
 
                     $itme->orderId = $order->id;
