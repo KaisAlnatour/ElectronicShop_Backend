@@ -93,8 +93,11 @@ class OrderController extends BaseController
 
             if (isset($request->itmes)) {
                 foreach ($request->itmes as $key => $value) {
-                    $itme = new OrderItem();
-//                    $itme = OrderItem::find($value->id);
+                    if (isset($value['id']))
+                        $itme = OrderItem::find($value['id']);
+                    else
+                        $itme = new OrderItem();
+
                     $itme->orderId = $order->id;
                     $itme->productId = $value['productId'];
                     $itme->quantity = $value['quantity'];
@@ -109,7 +112,7 @@ class OrderController extends BaseController
             $order->save();
         }
 
-        return $this->sendResponse(new OrderRes($order), 'Add Product successfully.');
+        return $this->sendResponse(new OrderRes($order), 'edit Product successfully.');
 
     }
 
